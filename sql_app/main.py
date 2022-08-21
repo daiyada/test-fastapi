@@ -1,15 +1,15 @@
+from secrets import token_urlsafe
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
-from . import crud, models, schemas
+from . import auth, crud, models, schemas
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
 
 # Dependency
 def get_db():
@@ -22,7 +22,6 @@ def get_db():
 
 db_session = Depends(get_db)
 
-
 @app.get("/health-check")
 def health_check(db: Session = db_session):
     return {"status": "ok"}
@@ -30,6 +29,9 @@ def health_check(db: Session = db_session):
 
 @app.post("/users/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = db_session):
+    """
+    @brief 問題1よりユーザ作成エンドポイント (POST /users) は無認証で受け付ける事とする。
+    """
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -37,7 +39,7 @@ def create_user(user: schemas.UserCreate, db: Session = db_session):
 
 
 @app.get("/users/", response_model=List[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = db_session):
+def read_users(skip: int = 0, limit: int = 100, db: Session = db_session, token: str = Depends(auth.oauth2_scheme)):
     users = crud.get_users(db, skip=skip, limit=limit)
     return users
 
