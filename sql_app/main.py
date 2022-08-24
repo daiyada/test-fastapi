@@ -6,26 +6,15 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 
 from . import auth, crud, models, schemas
-from .database import SessionLocal, engine
+from .database import SessionLocal, engine, db_session
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-db_session = Depends(get_db)
-
 @app.post("/token", response_model=schemas.Token)
-async def login_for_access_token(form_data = Depends(), db: Session = Depends(get_db)):
-    user = auth.authenticate_user(db, form_data.email, form_data.password)
+async def login_for_access_token(form_data = Depends()):
+    user = auth.authenticate_user(db_session, form_data.email, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -74,3 +63,12 @@ def create_item_for_user(
 def read_items(skip: int = 0, limit: int = 100, db: Session = db_session):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
+
+@app.get("/users/me/", response_model=schemas.User)
+async def read_users_me(current_user: schemas.User = Depends(auth.get_current_active_user)):
+    return current_user
+
+
+@app.get("/users/me/items/")
+async def read_own_items(current_user: schemas.User = Depends(auth.get_current_active_user)):
+    return [{"item_id": "Foo", "owner": current_user.email}]
