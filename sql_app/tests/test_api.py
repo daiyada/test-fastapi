@@ -14,3 +14,15 @@ def test_create_user(test_db, client):
     data = response.json()
     assert data["email"] == "deadpool@example.com"
     assert data["id"] == user_id
+
+def test_authenticate_user(test_db, client):
+    """
+    @brief 問題1のテスト
+    """
+    response = client.post(
+        "/users/",
+        json={
+            "email": "deadpool@example.com",
+            "password": "chimichangas4life",
+            },
+    )

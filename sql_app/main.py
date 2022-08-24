@@ -3,7 +3,6 @@ from secrets import token_urlsafe
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from . import auth, crud, models, schemas
@@ -25,7 +24,7 @@ def get_db():
 db_session = Depends(get_db)
 
 @app.post("/token", response_model=schemas.Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login_for_access_token(form_data = Depends(), db: Session = Depends(get_db)):
     user = auth.authenticate_user(db, form_data.email, form_data.password)
     if not user:
         raise HTTPException(
@@ -43,14 +42,12 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 def health_check(db: Session = db_session):
     return {"status": "ok"}
 
-
 @app.post("/users/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = db_session):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db=db, user=user)
-
 
 @app.get("/users/", response_model=List[schemas.User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = db_session):

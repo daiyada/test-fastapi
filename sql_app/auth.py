@@ -1,22 +1,38 @@
 from datetime import datetime, timedelta
+import hashlib
 from typing import Union
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-
 from sql_app.crud import get_user
 
-from .schemas import Token, TokenData, 
+from .models import User
+from .schemas import TokenData
 
 # openssl rand -hex 32
 SECRET_KEY = "4debb9cc4119ba756a69f5966bec69565ae89cfe53d438cb3929d091ff8ac895"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+h = hashlib.new("sha256")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+def verify_password(plain_password, hashed_password):
+    """
+    @brief パスワードがハッシュ化されたパスワードか同一か確認する関数
+    """
+    ret = False
+    if hashed_password == h.update(plain_password.encode()).hexdigest():
+        ret = True
+    return ret
+
+def get_hashed_password(password):
+    """
+    @brief ハッシュ化されたパスワードを返す
+    """
+    return h.update(password.encode()).hexdigest()
 
 def authenticate_user(db: Session, email: str, password: str):
     """
@@ -64,6 +80,13 @@ async def get_current_user(db: Session, token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
+async def get_current_active_user(current_user: User = Depends(get_current_user)):
+    """
+    @brief 認証済みのアクティブユーザーの取得用関数
+    """
+    if current_user.disabled:
+        raise HTTPException(staus_code=400, detail="Inactive user")
+    return current_user
 
 
 
