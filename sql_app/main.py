@@ -1,12 +1,11 @@
 from datetime import timedelta
 from secrets import token_urlsafe
 from typing import List
-from .. import auth
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 
-from . import crud, models, schemas
+from . import auth, crud, models, schemas
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -24,8 +23,8 @@ def get_db():
 db_session = Depends(get_db)
 
 @app.post("/token", response_model=schemas.Token)
-async def login_for_access_token(form_data: schemas.FormData):
-    user = auth.authenticate_user(db_session, form_data.id, form_data.password)
+async def login_for_access_token(form_data: schemas.FormData, db: Session = db_session):
+    user = auth.authenticate_user(db, form_data.id, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

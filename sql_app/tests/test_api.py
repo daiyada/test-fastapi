@@ -15,19 +15,11 @@ def test_create_user(test_db, client):
     assert "id" in data
     user_info["id"] = data["id"]
 
-    response2 = client.post(
+    response_authenticated = client.post(
         "/token",
         json=user_info
     )
-    # assert response2.status_code == 200, response.text
-    # data2 = response2.json()
-    # assert data2.get("access_token")
-    # assert data2.get("token_type") == "bearer"
-
-
-
-    # response = client.get(f"/users/{user_id}")
-    # assert response.status_code == 200, response.text
-    # data = response.json()
-    # assert data["email"] == "deadpool@example.com"
-    # assert data["id"] == user_id
+    assert response_authenticated.status_code == 200, response.text
+    token = response_authenticated.json()
+    assert token.get("access_token")
+    assert token.get("token_type") == "bearer"
