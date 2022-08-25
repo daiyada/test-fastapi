@@ -24,6 +24,7 @@ class UserBase(BaseModel):
     email: str
 
 
+
 class UserCreate(UserBase):
     password: str
 
@@ -43,4 +44,9 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: Union[str, None] = None
+    user_id: Union[int, None] = None
+
+
+class FormData(BaseModel):
+    id: int
+    password: str

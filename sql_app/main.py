@@ -1,20 +1,31 @@
 from datetime import timedelta
 from secrets import token_urlsafe
 from typing import List
+from .. import auth
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 
-from . import auth, crud, models, schemas
-from .database import SessionLocal, engine, db_session
+from . import crud, models, schemas
+from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+db_session = Depends(get_db)
+
 @app.post("/token", response_model=schemas.Token)
-async def login_for_access_token(form_data = Depends()):
-    user = auth.authenticate_user(db_session, form_data.email, form_data.password)
+async def login_for_access_token(form_data: schemas.FormData):
+    user = auth.authenticate_user(db_session, form_data.id, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -23,7 +34,7 @@ async def login_for_access_token(form_data = Depends()):
         )
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.id}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -42,7 +53,6 @@ def create_user(user: schemas.UserCreate, db: Session = db_session):
 def read_users(skip: int = 0, limit: int = 100, db: Session = db_session):
     users = crud.get_users(db, skip=skip, limit=limit)
     return users
-
 
 @app.get("/users/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = db_session):
