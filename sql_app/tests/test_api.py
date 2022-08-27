@@ -1,5 +1,17 @@
+from datetime import timedelta
+
+from jose import jwt
+
+from ..auth import (
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token
+)
+from ..crud import get_user_by_email
+
 class TestUserCreation(object):
-    def test_create_user(self, test_db, client):
+    def test_create_user(self, client, test_db):
         response = client.post(
             "/users/",
             json={"email": "deadpool@example.com", "password": "chimichangas4life"},
@@ -26,11 +38,18 @@ class TestAuthTokenCreation(object):
     @brief 認証トークン発行に関するテスト
     """
 
-    def test_create_auth_token_successfully(self, test_db, client, test_user):
+    def test_create_auth_token_success(self, test_db, client, test_user):
         """
         @brief 正常系のテスト
         """
-        pass
+        expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(data={"sub": test_user.email}, expires_delta=expires)
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        authenticated_user = get_user_by_email(test_db, email=email)
+        assert authenticated_user.email == test_user.email
+        assert authenticated_user.id == test_user.id
+
 
 class TestUserAunthentication(object):
     """
@@ -43,6 +62,7 @@ class TestUserAunthentication(object):
         @brief 正常系のテスト
         """
         pass
+
 
 class TestUserYourself(object):
     """
