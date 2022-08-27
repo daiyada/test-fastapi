@@ -1,33 +1,25 @@
-import pytest
+from datetime import timedelta
+
 from fastapi import Depends
 from fastapi.testclient import TestClient
+from jose import jwt
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.orm.session import close_all_sessions
 
+from ..auth import (
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token
+)
 from ..crud import get_user_by_email, create_user
 from ..database import Base
 from ..main import app, get_db
 from ..models import User
 from ..schemas import UserCreate
 
-# SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-
-# engine = create_engine(
-#     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-# )
-# TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-# def override_get_db():
-#     try:
-#         db = TestingSessionLocal()
-#         yield db
-#     finally:
-#         db.close()
-
-
-# app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
@@ -74,3 +66,14 @@ def test_user(test_db) -> User:
     if existed_user:
         return existed_user
     return create_user(test_db, new_user)
+
+
+@pytest.fixture(scope="class")
+def authorized_user(client, test_user) -> User:
+    expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": test_user.email}, expires_delta=expires
+    )
+    payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+    email: str = payload.get("sub")
+    return get_user_by_email(test_db, email=email)
