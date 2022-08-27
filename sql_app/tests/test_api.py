@@ -1,6 +1,9 @@
 from datetime import timedelta
 
 from jose import jwt
+from jose.exceptions import JWTError
+from pydantic import ValidationError
+import pytest
 
 from ..auth import (
     SECRET_KEY,
@@ -38,17 +41,38 @@ class TestAuthTokenCreation(object):
     @brief 認証トークン発行に関するテスト
     """
 
-    def test_create_auth_token_success(self, test_db, client, test_user):
+    def test_create_auth_token_successfully(self, test_db, client, test_user):
         """
-        @brief 正常系のテスト
+        @brief  [正常系] トークンを作成して、そのトークンをデコードして
+                登録したユーザー情報が確認できるか
         """
         expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(data={"sub": test_user.email}, expires_delta=expires)
+        access_token = create_access_token(
+            data={"sub": test_user.email}, expires_delta=expires
+        )
         payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         authenticated_user = get_user_by_email(test_db, email=email)
         assert authenticated_user.email == test_user.email
         assert authenticated_user.id == test_user.id
+
+    @pytest.mark.parametrize(
+        "secret_key, error", (
+            ("wrong key", JWTError),
+            (b"byte-formatted wrong key", JWTError)
+        )
+    )
+    def test_invalid_token(self, client, test_user, secret_key, error):
+        """
+        @brief  [異常系] エンコードとデコードでSecret keyが異なる場合に
+                エラーが生じるか
+        """
+        expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        with pytest.raises(error):
+            access_token = create_access_token(
+                data={"sub": test_user.email}, expires_delta=expires
+            )
+            jwt.decode(access_token, secret_key, algorithms=[ALGORITHM])
 
 
 class TestUserAunthentication(object):
@@ -57,7 +81,7 @@ class TestUserAunthentication(object):
     @brief ユーザー認証に関するテスト
     """
 
-    def test_authenticate_user_successfully(self, test_db, client, test_user):
+    def test_authenticate_user_normally(self, test_db, client, test_user):
         """
         @brief 正常系のテスト
         """
