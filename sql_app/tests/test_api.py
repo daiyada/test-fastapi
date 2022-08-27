@@ -1,4 +1,5 @@
 from datetime import timedelta
+from os import access
 
 from jose import jwt
 from jose.exceptions import JWTError
@@ -17,7 +18,10 @@ class TestUserCreation(object):
     def test_create_user(self, client, test_db):
         response = client.post(
             "/users/",
-            json={"email": "deadpool@example.com", "password": "chimichangas4life"},
+            json={
+                "email": "deadpool@example.com",
+                "password": "chimichangas4life"
+            },
         )
         assert response.status_code == 200, response.text
         data = response.json()
@@ -85,7 +89,23 @@ class TestUserAunthentication(object):
         """
         @brief 正常系のテスト
         """
-        pass
+        entry_data = {
+                "email": "deadpool@example.com",
+                "password": "chimichangas4life"
+            }
+        response = client.post(
+            "/token",
+            json=entry_data
+        )
+        assert response.status_code == 200, response.text
+        assert response.json().get("access_token")
+        assert response.json().get("token_type") == "bearer"
+        access_token = response.json().get("access_token")
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        authenticated_user = get_user_by_email(test_db, email=email)
+        assert authenticated_user.email == test_user.email
+        assert authenticated_user.id == test_user.id
 
 
 class TestUserYourself(object):

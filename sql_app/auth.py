@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from .crud import get_user
+from .crud import get_user, get_user_by_email
 from .models import User
 from .schemas import TokenData
 
@@ -31,11 +31,11 @@ def verify_password(plain_password, hashed_password):
         ret = True
     return ret
 
-def authenticate_user(db: Session, user_id: str, password: str):
+def authenticate_user(db: Session, email: str, password: str):
     """
     @brief ユーザを認証して、そのユーザを返す関数
     """
-    user = get_user(db, user_id)
+    user = get_user_by_email(db, email)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
