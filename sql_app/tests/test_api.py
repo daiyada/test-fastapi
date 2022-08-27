@@ -68,8 +68,7 @@ class TestAuthTokenCreation(object):
     )
     def test_invalid_token(self, client, test_user, secret_key, error):
         """
-        @brief  [異常系] エンコードとデコードでSecret keyが異なる場合に
-                エラーが生じるか
+        @brief  [異常系] エンコードとデコードでSecret keyが異なる場合
         """
         expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         with pytest.raises(error):
@@ -87,10 +86,11 @@ class TestUserAunthentication(object):
 
     def test_authenticate_user_normally(self, test_db, client, test_user):
         """
-        @brief 正常系のテスト
+        @brief  [正常系] DBに登録済みのユーザーにログインして情報にアクセス
+                できるか
         """
         entry_data = {
-                "email": "deadpool@example.com",
+                "email": test_user.email,
                 "password": "chimichangas4life"
             }
         response = client.post(
@@ -108,40 +108,27 @@ class TestUserAunthentication(object):
         assert authenticated_user.id == test_user.id
 
 
-class TestUserYourself(object):
-    """
-    @relation 問題1
-    @brief ユーザー認証に関するテスト
-    """
-    # NOTE: これは問題2の方のテストの気がするが、一応問題1用として実装。
-
-    def test_get_yourself(self, test_db, client, test_user):
+    @pytest.mark.parametrize(
+        "email, password, status_code",
+        (
+            ("deadpool@example.com", "aaa", 401),
+            ("deadpool@example.com", None, 422),
+            ("wrong", "chimichangas4life", 401),
+            (None, "chimichangas4life", 422)
+        )
+    )
+    def test_authentication_with_wrong_entry_data(self, test_db, client, test_user, email, password, status_code):
         """
-        @brief 正常系のテスト
+        @brief  [異常系] エントリー情報が異なる場合
         """
-        pass
-
-
-# def test_create_user(test_db, client):
-#     """
-#     @brief 問題1用のテストに改変
-#     """
-#     user_info = {"email": "deadpool@example.com", "password": "chimichangas4life"}
-#     response = client.post(
-#         "/users/",
-#         json=user_info,
-#     )
-#     assert response.status_code == 200, response.text
-#     data = response.json()
-#     assert data["email"] == "deadpool@example.com"
-#     assert "id" in data
-#     # user_info["id"] = data["id"]
-
-#     response_authenticated = client.post(
-#         "/token",
-#         json=user_info
-#     )
-#     assert response_authenticated.status_code == 200, response.text
-#     token = response_authenticated.json()
-#     assert token.get("access_token")
-#     assert token.get("token_type") == "bearer"
+        entry_data = {
+                "email": email,
+                "password": password
+            }
+        response = client.post(
+            "/token",
+            json=entry_data
+        )
+        assert response.status_code == status_code
+        assert "access_token" not in response.json()
+        assert "token_type" not in response.json()
