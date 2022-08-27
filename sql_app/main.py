@@ -37,9 +37,11 @@ async def login_for_access_token(form_data: schemas.UserCreate, db: Session = db
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @app.get("/health-check")
 def health_check(db: Session = db_session):
     return {"status": "ok"}
+
 
 @app.post("/users/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = db_session):
@@ -48,10 +50,12 @@ def create_user(user: schemas.UserCreate, db: Session = db_session):
         raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db=db, user=user)
 
+
 @app.get("/users/", response_model=List[schemas.User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = db_session):
     users = crud.get_users(db, skip=skip, limit=limit)
     return users
+
 
 @app.get("/users/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = db_session):
@@ -72,6 +76,7 @@ def create_item_for_user(
 def read_items(skip: int = 0, limit: int = 100, db: Session = db_session):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
+
 
 @app.get("/users/me/", response_model=schemas.User)
 async def read_users_me(current_user: schemas.User = Depends(auth.get_current_active_user)):

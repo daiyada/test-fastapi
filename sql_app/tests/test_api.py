@@ -35,13 +35,15 @@ class TestUserCreation(object):
         assert data["email"] == "deadpool@example.com"
         assert data["id"] == user_id
 
+
 ############################################
-# 問題1に関するテスト
+# 問題 1 に関するテスト
 ############################################
+
 
 class TestAuthTokenCreation(object):
     """
-    @relation 問題1
+    @relation 問題 1
     @brief 認証トークン発行に関するテスト
     """
 
@@ -59,6 +61,7 @@ class TestAuthTokenCreation(object):
         authenticated_user = get_user_by_email(test_db, email=email)
         assert authenticated_user.email == test_user.email
         assert authenticated_user.id == test_user.id
+
 
     @pytest.mark.parametrize(
         "secret_key, error", (
@@ -80,7 +83,7 @@ class TestAuthTokenCreation(object):
 
 class TestUserAunthentication(object):
     """
-    @relation 問題1
+    @relation 問題 1
     @brief ユーザー認証に関するテスト
     """
 
@@ -132,3 +135,29 @@ class TestUserAunthentication(object):
         assert response.status_code == status_code
         assert "access_token" not in response.json()
         assert "token_type" not in response.json()
+
+
+############################################
+# 問題 2 に関するテスト
+############################################
+
+
+class TestGetOwnItems(object):
+    """
+    @relation 問題 2
+    @brief 自身のItemを取得することに関するテスト
+    """
+
+    def test_get_own_items(self, test_db, client, test_user):
+        """
+        @brief  [正常系] 所有しているItemsを取得
+        """
+        pass
+
+
+    def test_get_items_under_non_authorization(self, test_db, client, test_user):
+        """
+        @brief  [異常系] ログインしていない状態で自身のItemsを取得できない
+                ことを確認
+        """
+        pass
