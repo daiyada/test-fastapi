@@ -16,16 +16,47 @@ class TestUserCreation(object):
         assert data["email"] == "deadpool@example.com"
         assert data["id"] == user_id
 
-class TestUserAuthentication(object):
+############################################
+# 問題1に関するテスト
+############################################
+
+class TestAuthTokenCreation(object):
     """
-    @brief ユーザー認証に関わるテスト [ 問題1 ]
+    @relation 問題1
+    @brief 認証トークン発行に関するテスト
     """
 
-    def test_user_authentication_normally(self, test_db, client):
+    def test_create_auth_token_successfully(self, test_db, client, test_user):
         """
         @brief 正常系のテスト
         """
         pass
+
+class TestUserAunthentication(object):
+    """
+    @relation 問題1
+    @brief ユーザー認証に関するテスト
+    """
+
+    def test_authenticate_user_successfully(self, test_db, client, test_user):
+        """
+        @brief 正常系のテスト
+        """
+        pass
+
+class TestUserYourself(object):
+    """
+    @relation 問題1
+    @brief ユーザー認証に関するテスト
+    """
+    # NOTE: これは問題2の方のテストの気がするが、一応問題1用として実装。
+
+    def test_get_yourself(self, test_db, client, test_user):
+        """
+        @brief 正常系のテスト
+        """
+        pass
+
 
 # def test_create_user(test_db, client):
 #     """
