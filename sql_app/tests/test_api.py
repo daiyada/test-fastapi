@@ -1,9 +1,7 @@
 from datetime import timedelta
-from os import access
 
 from jose import jwt
 from jose.exceptions import JWTError
-from pydantic import ValidationError
 import pytest
 
 from ..auth import (
