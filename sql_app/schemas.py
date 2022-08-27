@@ -45,8 +45,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     user_id: Union[int, None] = None
-
-
-class FormData(BaseModel):
-    id: int
-    password: str

@@ -23,8 +23,8 @@ def get_db():
 db_session = Depends(get_db)
 
 @app.post("/token", response_model=schemas.Token)
-async def login_for_access_token(form_data: schemas.FormData, db: Session = db_session):
-    user = auth.authenticate_user(db, form_data.id, form_data.password)
+async def login_for_access_token(form_data: schemas.UserCreate, db: Session = db_session):
+    user = auth.authenticate_user(db, form_data.email, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -33,7 +33,7 @@ async def login_for_access_token(form_data: schemas.FormData, db: Session = db_s
         )
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
-        data={"sub": user.id}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
