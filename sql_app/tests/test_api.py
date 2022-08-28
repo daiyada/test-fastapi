@@ -151,12 +151,15 @@ class TestGetOwnItems(object):
         """
         @brief  [正常系] 所有しているItemsを取得
         """
+        path_param = f"/users/{test_user.id}/items/"
+
+        # 1個目のitemを登録
         new_item = {
             "title": "Test",
             "description": "Trial for perfection"
         }
         response = client.post(
-            f"/users/{test_user.id}/items/",
+            path_param,
             json=new_item
         )
         item_data = response.json()
@@ -166,10 +169,21 @@ class TestGetOwnItems(object):
         assert "id" in item_data
         assert "owner_id" in item_data
 
-        response2 = authorized_client.get(
-            "/me/items/"
+        # 2個目のitemを登録
+        new_item2 = {
+        "title": "Test2",
+        "description": "Trial for perfection 2"
+        }
+        response2 = client.post(
+            path_param,
+            json=new_item2
         )
         assert response2.status_code == 200, response2.text
+
+        response3 = authorized_client.get(
+            "/me/items/"
+        )
+        assert response3.status_code == 200, response3.text
 
 
     def test_get_items_under_non_authorization(self, client, test_user):
@@ -183,3 +197,6 @@ class TestGetOwnItems(object):
         assert response.status_code == 401, response.text
 
 
+############################################
+# 問題 3 に関するテスト
+############################################
