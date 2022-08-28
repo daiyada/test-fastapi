@@ -72,3 +72,21 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = db_session):
 @app.get("/me/items/")
 async def read_own_items(current_user: schemas.User = Depends(auth.get_current_active_user)):
     return current_user.items
+
+
+@app.delete("users/{user_id}/")
+def delete_user(user_id: int, db: Session = db_session):
+    user_for_deletion = crud.get_user(db, user_id)
+    active_users = crud.get_active_users(db)
+    if not user_for_deletion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No user for deletion found.'
+            )
+    if not active_users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No active user in db.'
+            )
+    user = crud.delete_user(db, user_for_deletion, active_users)
+    return user.is_active

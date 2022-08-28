@@ -200,3 +200,36 @@ class TestGetOwnItems(object):
 ############################################
 # 問題 3 に関するテスト
 ############################################
+
+
+class TestDeleteUser(object):
+    """
+    @relation 問題 3
+    @brief ユーザー削除に関するテスト
+    """
+    def test_delete_user_with_active_users(self, client, test_user):
+        """
+        @brief [正常系] db内に削除対象以外のactive_userが1人以上いる場合の確認
+        """
+        pass
+
+
+    def test_delete_user_with_non_other_active_users(self, client, test_user):
+        """
+        @brief [正常系] db内に削除対象以外のactive_userが0人の場合の確認
+        """
+        pass
+
+
+    def test_exist_no_user_for_deletion(self, client, test_user):
+        """
+        @brief [異常系] 削除対象のユーザーがdb上にいない場合
+        """
+        pass
+
+
+    def test_exist_no_active_user_in_db(self, client, test_user):
+        """
+        @brief [異常系] dbにactive_userがいない場合
+        """
+        pass
