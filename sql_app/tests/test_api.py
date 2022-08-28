@@ -13,6 +13,7 @@ from ..auth import (
 )
 from ..crud import delete_user, get_user_by_email, create_user_item, get_user, get_active_users, delete_user
 from ..schemas import ItemCreate
+from ..models import User
 
 class TestUserCreation(object):
     def test_create_user(self, client, test_db):
@@ -238,15 +239,24 @@ class TestDeleteUser(object):
         assert response_user[0].get("is_active") == False
 
 
-    def test_exist_no_user_for_deletion(self, test_db, client, test_user):
-        """
-        @brief [異常系] 削除対象のユーザーがdb上にいない場合
-        """
-        pass
-
-
-    def test_exist_no_active_user_in_db(self, test_db, client, test_user):
+    def test_exist_no_user_for_deletion(self, test_db, client, test_user_with_item):
         """
         @brief [異常系] dbにactive_userがいない場合
         """
-        pass
+        test_user_with_item.is_active = False
+        response = client.put(
+            f"/users/{test_user_with_item.id}/",
+        )
+        assert response.status_code == 404, response.text
+
+
+    def test_exist_no_active_user_in_db(self, test_db, client, test_3users_with_items):
+        """
+        @brief [異常系] 削除対象のユーザーがdb上にいない場合
+        """
+        user_1 = test_3users_with_items[0]
+        user_1.is_active = False
+        response = client.put(
+            f"/users/{user_1.id}/",
+        )
+        assert response.status_code == 404, response.text

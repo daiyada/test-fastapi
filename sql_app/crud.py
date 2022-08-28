@@ -1,6 +1,5 @@
 import copy
-from turtle import title
-from typing import List
+from typing import List, Union
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -21,7 +20,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 
 def get_active_users(db: Session):
-    return db.query(models.User).filter(models.User.is_active == True).all()
+    return [user for user in db.query(models.User).all() if user.is_active==True]
 
 
 def create_user(db: Session, user: schemas.UserCreate):
@@ -45,7 +44,8 @@ def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
     return db_item
 
 
-def delete_user(db: Session, active_users: List[models.User], user_id_for_deletion: int):
+def delete_user(db: Session, active_users: List[models.User], user_id_for_deletion: int\
+                , user_for_deletion: Union[models.User, None] =None):
     for active_user in active_users:
         if active_user.id == user_id_for_deletion:
             user_for_deletion = active_user

@@ -1,7 +1,6 @@
 from datetime import timedelta
 from typing import List
 
-from fastapi import Depends
 from fastapi.testclient import TestClient
 from jose import jwt
 import pytest
@@ -85,7 +84,7 @@ def authorized_client(client, test_user, test_db) -> User:
 @pytest.fixture(scope="function")
 def test_3users_with_items(test_db) -> List[User]:
     new_user_info_1 = UserCreate(
-        email="b1@example.com",
+        email="a1@example.com",
         password="b14life"
     )
     new_user_info_2 = UserCreate(
@@ -112,9 +111,9 @@ def test_3users_with_items(test_db) -> List[User]:
         title="Test3",
         description="3 Trial for perfection"
     )
-    db_item_1 = create_user_item(test_db, item_1, user_id=new_user_1.id)
-    db_item_2 = create_user_item(test_db, item_2, user_id=new_user_2.id)
-    db_item_3 = create_user_item(test_db, item_3, user_id=new_user_3.id)
+    _ = create_user_item(test_db, item_1, user_id=new_user_1.id)
+    _ = create_user_item(test_db, item_2, user_id=new_user_2.id)
+    _ = create_user_item(test_db, item_3, user_id=new_user_3.id)
     return [new_user_1, new_user_2, new_user_3]
 
 
@@ -129,5 +128,5 @@ def test_user_with_item(test_db) -> User:
         title="Test1",
         description="1 Trial for perfection"
     )
-    db_item_1 = create_user_item(test_db, item_1, user_id=new_user_1.id)
+    _ = create_user_item(test_db, item_1, user_id=new_user_1.id)
     return new_user_1
