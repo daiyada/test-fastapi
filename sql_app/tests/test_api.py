@@ -169,12 +169,17 @@ class TestGetOwnItems(object):
         response2 = authorized_client.get(
             "/me/items/"
         )
-        assert response2.status_code == 200, response.text
+        assert response2.status_code == 200, response2.text
 
 
-    def test_get_items_under_non_authorization(self, test_db, client, test_user):
+    def test_get_items_under_non_authorization(self, client, test_user):
         """
         @brief  [異常系] ログインしていない状態で自身のItemsを取得できない
                 ことを確認
         """
-        pass
+        response = client.get(
+            "/me/items/"
+        )
+        assert response.status_code == 401, response.text
+
+

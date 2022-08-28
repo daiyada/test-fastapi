@@ -50,13 +50,13 @@ def test_db():
     engine.dispose()
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def client():
     client = TestClient(app)
     return client
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def test_user(test_db) -> User:
     new_user = UserCreate(
         email="deadpool@example.com",
@@ -68,7 +68,7 @@ def test_user(test_db) -> User:
     return create_user(test_db, new_user)
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def authorized_client(client, test_user, test_db) -> User:
     expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
