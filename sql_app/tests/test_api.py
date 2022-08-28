@@ -208,30 +208,34 @@ class TestDeleteUser(object):
     @relation 問題 3
     @brief ユーザー削除に関するテスト
     """
-    def test_delete_user_with_active_users(self, test_db, client, test_3users):
+    def test_delete_user_with_active_users(self, test_db, client, test_3users_with_items):
         """
         @brief [正常系] db内に削除対象以外のactive_userが1人以上いる場合の確認
         """
         # リストの頭 ( id = 1 ) のユーザーを消すこととする
-        user_for_deletion = test_3users[0]
+        user_for_deletion = test_3users_with_items[0]
         response = client.put(
             f"/users/{user_for_deletion.id}/",
         )
         response_users = response.json()
-
         assert response.status_code == 200, response.text
         assert response_users[0].get("id") == user_for_deletion.id
-        assert response_users[0].get("is_active") == user_for_deletion.is_active
+        assert response_users[0].get("is_active") == False
         # 削除した際に、残りのactive_userの中で一番小さいidのuserにitemsが移動しているかを確認
         assert response_users[1].get("items")[1].get("title") == user_for_deletion.items[0].title
         assert response_users[1].get("items")[1].get("description") == user_for_deletion.items[0].description
 
 
-    def test_delete_user_with_non_other_active_users(self, test_db, client, test_user):
+    def test_delete_user_with_non_other_active_users(self, test_db, client, test_user_with_item):
         """
         @brief [正常系] db内に削除対象以外のactive_userが0人の場合の確認
         """
-        pass
+        response = client.put(
+            f"/users/{test_user_with_item.id}/",
+        )
+        response_user = response.json()
+        assert response.status_code == 200, response.text
+        assert response_user[0].get("is_active") == False
 
 
     def test_exist_no_user_for_deletion(self, test_db, client, test_user):

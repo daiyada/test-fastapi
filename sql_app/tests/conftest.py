@@ -25,7 +25,7 @@ from ..schemas import Item, ItemCreate, UserCreate
 client = TestClient(app)
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 def test_db():
     SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
     engine = create_engine(
@@ -83,10 +83,10 @@ def authorized_client(client, test_user, test_db) -> User:
 
 
 @pytest.fixture(scope="function")
-def test_3users(test_db) -> List[User]:
+def test_3users_with_items(test_db) -> List[User]:
     new_user_info_1 = UserCreate(
-        email="deadpool@example.com",
-        password="chimichangas4life"
+        email="b1@example.com",
+        password="b14life"
     )
     new_user_info_2 = UserCreate(
         email="b2@example.com",
@@ -116,3 +116,18 @@ def test_3users(test_db) -> List[User]:
     db_item_2 = create_user_item(test_db, item_2, user_id=new_user_2.id)
     db_item_3 = create_user_item(test_db, item_3, user_id=new_user_3.id)
     return [new_user_1, new_user_2, new_user_3]
+
+
+@pytest.fixture(scope="function")
+def test_user_with_item(test_db) -> User:
+    new_user_info_1 = UserCreate(
+        email="deadpool@example.com",
+        password="chimichangas4life"
+    )
+    new_user_1 = create_user(test_db, new_user_info_1)
+    item_1 = ItemCreate(
+        title="Test1",
+        description="1 Trial for perfection"
+    )
+    db_item_1 = create_user_item(test_db, item_1, user_id=new_user_1.id)
+    return new_user_1
