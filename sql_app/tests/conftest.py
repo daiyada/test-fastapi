@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import List
 
 from fastapi import Depends
 from fastapi.testclient import TestClient
@@ -14,11 +15,11 @@ from ..auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     create_access_token
 )
-from ..crud import get_user_by_email, create_user
+from ..crud import create_user_item, get_user_by_email, create_user
 from ..database import Base, get_db
 from ..main import app
 from ..models import User
-from ..schemas import UserCreate
+from ..schemas import Item, ItemCreate, UserCreate
 
 
 client = TestClient(app)
@@ -79,3 +80,39 @@ def authorized_client(client, test_user, test_db) -> User:
         "Authorization": f"Bearer {access_token}",
     }
     return client
+
+
+@pytest.fixture(scope="function")
+def test_3users(test_db) -> List[User]:
+    new_user_info_1 = UserCreate(
+        email="deadpool@example.com",
+        password="chimichangas4life"
+    )
+    new_user_info_2 = UserCreate(
+        email="b2@example.com",
+        password="b24life"
+    )
+    new_user_info_3 = UserCreate(
+        email="c3@example.com",
+        password="c34life"
+    )
+    new_user_1 = create_user(test_db, new_user_info_1)
+    new_user_2 = create_user(test_db, new_user_info_2)
+    new_user_3 = create_user(test_db, new_user_info_3)
+
+    item_1 = ItemCreate(
+        title="Test1",
+        description="1 Trial for perfection"
+    )
+    item_2 = ItemCreate(
+        title="Test2",
+        description="2 Trial for perfection"
+    )
+    item_3 = ItemCreate(
+        title="Test3",
+        description="3 Trial for perfection"
+    )
+    db_item_1 = create_user_item(test_db, item_1, user_id=new_user_1.id)
+    db_item_2 = create_user_item(test_db, item_2, user_id=new_user_2.id)
+    db_item_3 = create_user_item(test_db, item_3, user_id=new_user_3.id)
+    return [new_user_1, new_user_2, new_user_3]

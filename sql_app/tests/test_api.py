@@ -1,4 +1,5 @@
 from datetime import timedelta
+import random
 
 from jose import jwt
 from jose.exceptions import JWTError
@@ -10,7 +11,7 @@ from ..auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     create_access_token
 )
-from ..crud import get_user_by_email, create_user_item
+from ..crud import delete_user, get_user_by_email, create_user_item, get_user, get_active_users, delete_user
 from ..schemas import ItemCreate
 
 class TestUserCreation(object):
@@ -171,8 +172,8 @@ class TestGetOwnItems(object):
 
         # 2個目のitemを登録
         new_item2 = {
-        "title": "Test2",
-        "description": "Trial for perfection 2"
+            "title": "Test2",
+            "description": "Trial for perfection 2"
         }
         response2 = client.post(
             path_param,
@@ -207,28 +208,40 @@ class TestDeleteUser(object):
     @relation 問題 3
     @brief ユーザー削除に関するテスト
     """
-    def test_delete_user_with_active_users(self, client, test_user):
+    def test_delete_user_with_active_users(self, test_db, client, test_3users):
         """
         @brief [正常系] db内に削除対象以外のactive_userが1人以上いる場合の確認
         """
-        pass
+        # リストの頭 ( id = 1 ) のユーザーを消すこととする
+        user_for_deletion = test_3users[0]
+        response = client.put(
+            f"/users/{user_for_deletion.id}/",
+        )
+        response_users = response.json()
+
+        assert response.status_code == 200, response.text
+        assert response_users[0].get("id") == user_for_deletion.id
+        assert response_users[0].get("is_active") == user_for_deletion.is_active
+        # 削除した際に、残りのactive_userの中で一番小さいidのuserにitemsが移動しているかを確認
+        assert response_users[1].get("items")[1].get("title") == user_for_deletion.items[0].title
+        assert response_users[1].get("items")[1].get("description") == user_for_deletion.items[0].description
 
 
-    def test_delete_user_with_non_other_active_users(self, client, test_user):
+    def test_delete_user_with_non_other_active_users(self, test_db, client, test_user):
         """
         @brief [正常系] db内に削除対象以外のactive_userが0人の場合の確認
         """
         pass
 
 
-    def test_exist_no_user_for_deletion(self, client, test_user):
+    def test_exist_no_user_for_deletion(self, test_db, client, test_user):
         """
         @brief [異常系] 削除対象のユーザーがdb上にいない場合
         """
         pass
 
 
-    def test_exist_no_active_user_in_db(self, client, test_user):
+    def test_exist_no_active_user_in_db(self, test_db, client, test_user):
         """
         @brief [異常系] dbにactive_userがいない場合
         """

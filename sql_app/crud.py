@@ -1,5 +1,8 @@
+import copy
+from turtle import title
 from typing import List
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -42,13 +45,23 @@ def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
     return db_item
 
 
-def delete_user(db: Session, user_for_deletion: models.User, active_users: List[models.User]):
-    if active_users == 1:
+def delete_user(db: Session, active_users: List[models.User], user_id_for_deletion: int):
+    for active_user in active_users:
+        if active_user.id == user_id_for_deletion:
+            user_for_deletion = active_user
+    if not user_for_deletion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='No user for deletion found.'
+            )
+    rest_active_users = copy.copy(active_users)
+    rest_active_users.remove(user_for_deletion)
+    if len(active_users) == 1:
         user_for_deletion.is_active = False
     else:
         user_for_deletion.is_active = False
-        min_user_id = min(active_users, key=lambda x:x.user_id)
-        if user_for_deletion.items:
-            for item in user_for_deletion.items:
-                item.owner_id = min_user_id
-    return user_for_deletion
+        min_id_active_user = min(rest_active_users, key=lambda x:x.id)
+        for item in user_for_deletion.items:
+            item_for_moving = schemas.ItemCreate(title=item.title, description=item.description)
+            _ = create_user_item(db, item_for_moving, user_id=min_id_active_user.id)
+    return active_users
