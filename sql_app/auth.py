@@ -8,6 +8,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from .crud import get_user, get_user_by_email
+from .database import db_session
 from .models import User
 from .schemas import TokenData
 
@@ -55,7 +56,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = db_session):
     """
     @brief アクセストークンを渡すことで、そのトークンに結びついたユーザを返す関数
     """
@@ -66,13 +67,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(user_id=user_id)
+        token_data = TokenData(email=email)
     except JWTError:
             raise credentials_exception
-    user = get_user(get_db, user_id=token_data.user_id)
+    user = get_user_by_email(db, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
@@ -81,7 +82,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     """
     @brief 認証済みのアクティブユーザーの取得用関数
     """
-    if current_user.disabled:
+    if not current_user.is_active:
         raise HTTPException(staus_code=400, detail="Inactive user")
     return current_user
 

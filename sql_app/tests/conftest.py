@@ -15,8 +15,8 @@ from ..auth import (
     create_access_token
 )
 from ..crud import get_user_by_email, create_user
-from ..database import Base
-from ..main import app, get_db
+from ..database import Base, get_db
+from ..main import app
 from ..models import User
 from ..schemas import UserCreate
 
@@ -69,11 +69,13 @@ def test_user(test_db) -> User:
 
 
 @pytest.fixture(scope="class")
-def authorized_user(client, test_user) -> User:
+def authorized_client(client, test_user, test_db) -> User:
     expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": test_user.email}, expires_delta=expires
     )
-    payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
-    email: str = payload.get("sub")
-    return get_user_by_email(test_db, email=email)
+    client.headers = {
+        **client.headers,
+        "Authorization": f"Bearer {access_token}",
+    }
+    return client

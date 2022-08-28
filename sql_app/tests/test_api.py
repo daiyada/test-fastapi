@@ -10,7 +10,8 @@ from ..auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     create_access_token
 )
-from ..crud import get_user_by_email
+from ..crud import get_user_by_email, create_user_item
+from ..schemas import ItemCreate
 
 class TestUserCreation(object):
     def test_create_user(self, client, test_db):
@@ -146,11 +147,29 @@ class TestGetOwnItems(object):
     @brief 自身のItemを取得することに関するテスト
     """
 
-    def test_get_own_items(self, test_db, client, test_user):
+    def test_get_own_items(self, test_db, client, authorized_client, test_user):
         """
         @brief  [正常系] 所有しているItemsを取得
         """
-        pass
+        new_item = {
+            "title": "Test",
+            "description": "Trial for perfection"
+        }
+        response = client.post(
+            f"/users/{test_user.id}/items/",
+            json=new_item
+        )
+        item_data = response.json()
+        assert response.status_code == 200, response.text
+        assert item_data.get("title") == "Test"
+        assert item_data.get("description") == "Trial for perfection"
+        assert "id" in item_data
+        assert "owner_id" in item_data
+
+        response2 = authorized_client.get(
+            "/me/items/"
+        )
+        assert response2.status_code == 200, response.text
 
 
     def test_get_items_under_non_authorization(self, test_db, client, test_user):
