@@ -1,7 +1,5 @@
 # Technical Interview Exercises - Python FastAPI sample
 
-これは、[株式会社 ABEJA](https://abejainc.com/ja/) の開発者採用面談で利用するコーディングテストの演習問題のひとつです。
-
 ## 制限事項
 
 以下の制限事項を守ってください。
